@@ -1,0 +1,110 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Set up the display
+WIDTH, HEIGHT = 640, 480
+WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Snake Game")
+
+# Define colors
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# Define snake properties
+BLOCK_SIZE = 20
+SNAKE_SPEED = 10
+
+# Snake class
+class Snake:
+    def __init__(self):
+        self.x = WIDTH // 2
+        self.y = HEIGHT // 2
+        self.dx = BLOCK_SIZE
+        self.dy = 0
+        self.body = [(self.x, self.y)]
+
+    def move(self):
+        self.x += self.dx
+        self.y += self.dy
+
+        if self.x >= WIDTH:
+            self.x = 0
+        elif self.x < 0:
+            self.x = WIDTH - BLOCK_SIZE
+
+        if self.y >= HEIGHT:
+            self.y = 0
+        elif self.y < 0:
+            self.y = HEIGHT - BLOCK_SIZE
+
+        self.body.insert(0, (self.x, self.y))
+        self.body.pop()
+
+    def draw(self):
+        for x, y in self.body:
+            pygame.draw.rect(WIN, GREEN, (x, y, BLOCK_SIZE, BLOCK_SIZE))
+
+    def eat_food(self):
+        self.body.append((self.x, self.y))
+
+    def check_collision(self):
+        return any(segment == (self.x, self.y) for segment in self.body[1:])
+
+# Food class
+class Food:
+    def __init__(self):
+        self.x = random.randint(0, WIDTH // BLOCK_SIZE - 1) * BLOCK_SIZE
+        self.y = random.randint(0, HEIGHT // BLOCK_SIZE - 1) * BLOCK_SIZE
+
+    def draw(self):
+        pygame.draw.rect(WIN, RED, (self.x, self.y, BLOCK_SIZE, BLOCK_SIZE))
+
+# Game loop
+def snake_game():
+    clock = pygame.time.Clock()
+    snake = Snake()
+    food = Food()
+
+    running = True
+    while running:
+        clock.tick(SNAKE_SPEED)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP and snake.dy != BLOCK_SIZE:
+                    snake.dx = 0
+                    snake.dy = -BLOCK_SIZE
+                elif event.key == pygame.K_DOWN and snake.dy != -BLOCK_SIZE:
+                    snake.dx = 0
+                    snake.dy = BLOCK_SIZE
+                elif event.key == pygame.K_LEFT and snake.dx != BLOCK_SIZE:
+                    snake.dx = -BLOCK_SIZE
+                    snake.dy = 0
+                elif event.key == pygame.K_RIGHT and snake.dx != -BLOCK_SIZE:
+                    snake.dx = BLOCK_SIZE
+                    snake.dy = 0
+
+        snake.move()
+
+        if snake.check_collision():
+            running = False
+
+        if snake.x == food.x and snake.y == food.y:
+            snake.eat_food()
+            food = Food()
+
+        WIN.fill(BLACK)
+        snake.draw()
+        food.draw()
+        pygame.display.update()
+
+    pygame.quit()
+
+# Start the game
+snake_game()
